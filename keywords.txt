@@ -1,0 +1,28 @@
+#######################################
+# Syntax Coloring Map For SoftServo
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SoftServo	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+attach	KEYWORD2
+detach	KEYWORD2
+asyncMode	KEYWORD2
+delayMode	KEYWORD2
+tick	KEYWORD2
+write	KEYWORD2
+writeMicroseconds	KEYWORD2
+read	KEYWORD2
+readMicroseconds	KEYWORD2
+attached	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
