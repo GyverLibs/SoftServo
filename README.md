@@ -94,6 +94,7 @@ void loop() {
 <a id="versions"></a>
 ## Версии
 - v1.0
+- v1.1 - переделан FastIO
 
 <a id="feedback"></a>
 ## Баги и обратная связь

@@ -15,12 +15,13 @@
 
     Версии:
     v1.0 - релиз
+    v1.1 - переделан FastIO
 */
 
 #ifndef SoftServo_h
 #define SoftServo_h
 #include <Arduino.h>
-#include "FastIO.h"
+#include "FastIO_v2.h"
 
 class SoftServo {
 public:
@@ -56,19 +57,19 @@ public:
                 if (!_flag) {
                     _tmrUs = micros();
                     _flag = 1;
-                    fastWrite(_pin, 1);                    
+                    F_fastWrite(_pin, 1);                    
                 } else {
                     if (micros() - _tmrUs >= _us) {
-                        fastWrite(_pin, 0);
+                        F_fastWrite(_pin, 0);
                         _flag = 0;
                         _tmr50 = millis();
                     } else return true;
                 }
             } else {
                 _tmr50 = millis();
-                fastWrite(_pin, 1);
+                F_fastWrite(_pin, 1);
                 delayMicroseconds(_us);
-                fastWrite(_pin, 0);
+                F_fastWrite(_pin, 0);
             }
         }
         return false;
