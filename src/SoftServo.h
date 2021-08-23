@@ -16,12 +16,12 @@
     Версии:
     v1.0 - релиз
     v1.1 - переделан FastIO
+    v1.1.1 - убран FastIO
 */
 
 #ifndef SoftServo_h
 #define SoftServo_h
 #include <Arduino.h>
-#include "FastIO_v2.h"
 
 class SoftServo {
 public:
@@ -57,19 +57,19 @@ public:
                 if (!_flag) {
                     _tmrUs = micros();
                     _flag = 1;
-                    F_fastWrite(_pin, 1);                    
+                    fastWrite(_pin, 1);                    
                 } else {
                     if (micros() - _tmrUs >= _us) {
-                        F_fastWrite(_pin, 0);
+                        fastWrite(_pin, 0);
                         _flag = 0;
                         _tmr50 = millis();
                     } else return true;
                 }
             } else {
                 _tmr50 = millis();
-                F_fastWrite(_pin, 1);
+                fastWrite(_pin, 1);
                 delayMicroseconds(_us);
-                F_fastWrite(_pin, 0);
+                fastWrite(_pin, 0);
             }
         }
         return false;
@@ -102,6 +102,17 @@ public:
     }
     
 private:
+    void fastWrite(const uint8_t pin, bool val) {
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
+        if (pin < 8) bitWrite(PORTD, pin, val);
+        else if (pin < 14) bitWrite(PORTB, (pin - 8), val);
+        else if (pin < 20) bitWrite(PORTC, (pin - 14), val);
+#elif defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny13__)
+        bitWrite(PORTB, pin, val);
+#else
+        digitalWrite(pin, val);
+#endif
+    }
     uint8_t _pin = 255;
     int _us = 700, _min, _max;
     bool _attached = false, _mode = false, _flag = false;
