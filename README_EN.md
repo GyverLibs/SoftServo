@@ -1,3 +1,5 @@
+This is an automatic translation, may be incorrect in some places. See sources and examples!
+
 # softservo
 Servo control library (millis/micros based)
 - Does not use additional hardware timer
