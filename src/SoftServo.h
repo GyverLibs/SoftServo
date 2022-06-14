@@ -17,6 +17,7 @@
     v1.0 - релиз
     v1.1 - переделан FastIO
     v1.1.1 - убран FastIO
+    v1.2 - мелкие фиксы
 */
 
 #ifndef SoftServo_h
@@ -32,6 +33,9 @@ public:
         _attached = true;
         _min = min;
         _max = max;
+        _tmr50 = millis();
+        _tmrUs = micros();
+        _flag = 0;
     }
     
     // отключить
@@ -115,7 +119,7 @@ private:
     }
     uint8_t _pin = 255;
     int _us = 700, _min, _max;
-    bool _attached = false, _mode = false, _flag = false;
-    uint32_t _tmr50 = 0, _tmrUs = 0;
+    bool _attached = 0, _mode = 0, _flag = 0;
+    uint32_t _tmr50, _tmrUs;
 };
 #endif
