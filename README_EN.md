@@ -53,13 +53,13 @@ SoftServo myservo;
 <a id="usage"></a>
 ## Use of use
 ```cpp
-void attach(int pin, int min = 500, int max = 2400);    // plug in
+void attach(uint8_t pin, uint16_t min = 500, uint16_t max = 2400); // attach
 void detach();          // disconnect
 void asyncMode();       // asynchronize
 void delayMode();       // switch to delay mode (by default)
 bool tick();            // ticker, call as often as possible, in asynchronous mode will return true during the development of the pulse
-void write(int value);  // corner
-void writeMicroseconds(int us); // momentum
+void write(uint16_t value);  // angle
+void writeMicroseconds(uint16_t us); // pulse width
 int read();             // return
 int readMicroseconds(); // return
 bool attached();        // True if the servo is connected

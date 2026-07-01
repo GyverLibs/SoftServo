@@ -30,10 +30,18 @@ class SoftServo {
 
     // подключить с указанием мин и макс импульса
     void attach(const uint8_t pin, uint16_t minus = 500, uint16_t maxus = 2400) {
+        detach();
+        if (minus > maxus) {
+            uint16_t buf = minus;
+            minus = maxus;
+            maxus = buf;
+        }
+        if (minus == maxus) ++maxus;
         _pin.init(pin, OUTPUT);
         _attached = true;
         _min = minus;
         _max = maxus;
+        _us = constrain(_us, _min, _max);
     }
 
     // подключить на старый пин
@@ -44,6 +52,8 @@ class SoftServo {
     // отключить
     void detach() {
         _attached = false;
+        _tmrUs = 0;
+        if (_pin.valid()) _pin.low();
     }
 
     // переключить в асинхронный режим
@@ -63,6 +73,7 @@ class SoftServo {
             if (uint16_t(uint16_t(micros()) - _tmrUs) >= _us) {
                 _pin.low();
                 _tmrUs = 0;
+                return false;
             }
             return true;
 
@@ -72,6 +83,7 @@ class SoftServo {
                 _pin.high();
                 _tmrUs = micros();
                 if (!_tmrUs) --_tmrUs;
+                return true;
             } else {
                 _pin.high();
                 delayMicroseconds(_us);
@@ -83,14 +95,14 @@ class SoftServo {
     }
 
     // поставить на угол
-    void write(int value) {
-        if (value < 200) value = map(value, 0, 180, _min, _max);
+    void write(uint16_t value) {
+        if (value < 200) value = map(min(value, uint16_t(180)), 0, 180, _min, _max);
         writeMicroseconds(value);
     }
 
     // поставить на импульс
-    void writeMicroseconds(int us) {
-        _us = us;
+    void writeMicroseconds(uint16_t us) {
+        _us = constrain(us, _min, _max);
     }
 
     // вернуть текущий угол
@@ -110,7 +122,7 @@ class SoftServo {
 
    private:
     gio::PinIO _pin;
-    uint16_t _us = 700, _min, _max;
+    uint16_t _us = 700, _min = 500, _max = 2400;
     uint16_t _tmr50 = 0, _tmrUs = 0;
     bool _attached = false, _async = false;
 };

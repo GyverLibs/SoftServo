@@ -52,13 +52,13 @@ SoftServo myservo;
 <a id="usage"></a>
 ## Использование
 ```cpp
-void attach(int pin, int min = 500, int max = 2400);    // подключить с указанием мин и макс импульса
+void attach(uint8_t pin, uint16_t min = 500, uint16_t max = 2400); // подключить с указанием мин и макс импульса
 void detach();          // отключить
 void asyncMode();       // переключить в асинхронный режим
 void delayMode();       // переключить в режим задержки (по умолч)
 bool tick();            // тикер, вызывать как можно чаще, в асинхронном режиме вернёт true во время отработки импульса
-void write(int value);  // поставить на угол
-void writeMicroseconds(int us); // поставить на импульс
+void write(uint16_t value);  // поставить на угол
+void writeMicroseconds(uint16_t us); // поставить на импульс
 int read();             // вернуть текущий угол
 int readMicroseconds(); // вернуть текущий импульс
 bool attached();        // true если серво подключена
