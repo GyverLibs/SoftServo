@@ -14,7 +14,6 @@ Servo software management library (based on millis/micros)
 - It runs on millis() and micros()
 - Servo syntax. h h
 - Working mode asynchronous and with delay
-- Increased productivity for AVR
 
 ### Compatibility
 Compatible with all Arduino platforms (Arduino features are used)
@@ -28,6 +27,7 @@ Compatible with all Arduino platforms (Arduino features are used)
 - [Bugs and feedback](#feedback)
 
 <a id="install"></a>
+
 ## Installation
 - The library can be found under the name **SoftServo** and installed through the library manager in:
     - Arduino IDE
@@ -45,27 +45,47 @@ Compatible with all Arduino platforms (Arduino features are used)
 - Manually: **Delete the folder with the old version** and then put the new one in its place. “Replacement” can not be done: sometimes new versions delete files that will remain when replaced and can lead to errors!
 
 <a id="init"></a>
+
 ## Initialization
 ```cpp
 SoftServo myservo;
 ```
 
 <a id="usage"></a>
+
 ## Use of use
 ```cpp
-void attach(uint8_t pin, uint16_t min = 500, uint16_t max = 2400); // attach
-void detach();          // disconnect
-void asyncMode();       // asynchronize
-void delayMode();       // switch to delay mode (by default)
-bool tick();            // ticker, call as often as possible, in asynchronous mode will return true during the development of the pulse
-void write(uint16_t value);  // angle
-void writeMicroseconds(uint16_t us); // pulse width
-int read();             // return
-int readMicroseconds(); // return
-bool attached();        // True if the servo is connected
+static constexpr uint16_t MinPulse = 544;   // default min pulse
+static constexpr uint16_t MaxPulse = 2400;  // default max pulse
+static constexpr uint16_t DefPulse = 1500;  // default pulse
+
+void setPWMFreq(uint16_t hz);   // set PWM frequency, default 50 Hz
+void config(uint16_t minUs, uint16_t maxUs); // set min-max pulses
+
+// attach with min-max pulse and start pulse
+void attach(uint8_t pin, uint16_t minUs = MinPulse, uint16_t maxUs = MaxPulse, uint16_t pulse = DefPulse);
+void detach();                  // disconnect
+
+void asyncMode();               // switch to async mode
+void delayMode();               // switch to delay mode (default)
+bool tick();                    // ticker, call as often as possible
+
+void write(uint16_t value, uint16_t maxAngle = 180); // set angle or pulse
+void writeMicroseconds(uint16_t us);                 // set pulse width
+uint16_t read(uint16_t maxAngle = 180);              // get current angle
+uint16_t readMicroseconds();                         // get current pulse
+
+bool attached();                // true if the servo is connected
+uint16_t getMinUs();            // get min pulse
+uint16_t getMaxUs();            // get max pulse
 ```
 
+`write(value)` works like `Servo`: if `value <= maxAngle`, the value is treated as an angle and mapped to the current `minUs/maxUs` range. If `value > maxAngle`, the value is treated as a pulse width in microseconds.
+
+In async mode `tick()` does not block for the pulse duration and returns `true` while the pulse is active. In delay mode `tick()` blocks for the pulse duration.
+
 <a id="example"></a>
+
 ## Example
 For more examples see **examples**!
 ```cpp
@@ -104,6 +124,7 @@ void loop() {
 ```
 
 <a id="versions"></a>
+
 ## Versions
 - v1.0
 - v1.1 - redesigned FastIO
@@ -111,6 +132,7 @@ void loop() {
 - v1.2 - small fixtures
 
 <a id="feedback"></a>
+
 ## Bugs and feedback
 If you find bugs, create **Issue**, or better write to the mail immediately.[alex@alexgyver.ru](mailto:alex@alexgyver.ru)  
 The library is open for revision and your **Pull Requests*!

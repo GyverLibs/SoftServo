@@ -1,59 +1,41 @@
-/*
-    Библиотека для программного управления Servo (на базе millis/micros)
-    Документация:
-    GitHub: https://github.com/GyverLibs/SoftServo
-    Возможности:
-    - Не использует дополнительный аппаратный таймер
-    - Работает на millis() и micros()
-    - Синтаксис как у Servo.h
-    - Режим работы асинхронный и с delay
-    - Повышенная произвводительность для AVR
-
-    AlexGyver, alex@alexgyver.ru
-    https://alexgyver.ru/
-    MIT License
-*/
-
 #pragma once
 #include <Arduino.h>
-#include <GyverIO.h>
-
-#define SSERVO_PERIOD 20
 
 class SoftServo {
    public:
-    SoftServo() {}
+    static constexpr uint16_t MinPulse = 544;
+    static constexpr uint16_t MaxPulse = 2400;
+    static constexpr uint16_t DefPulse = 1500;
 
-    SoftServo(const uint8_t pin, uint16_t minus = 500, uint16_t maxus = 2400) {
-        attach(pin, minus, maxus);
+    // установить частоту ШИМ (умолч. 50 Гц)
+    void setPWMFreq(uint16_t hz) {
+        if (!hz) hz = 1;
+        _pwmPrd = 1000 / hz;
+    }
+
+    // установить min-max импульсы
+    void config(uint16_t minUs, uint16_t maxUs) {
+        _minUs = minUs;
+        _maxUs = maxUs;
     }
 
     // подключить с указанием мин и макс импульса
-    void attach(const uint8_t pin, uint16_t minus = 500, uint16_t maxus = 2400) {
+    void attach(uint8_t pin, uint16_t minUs = MinPulse, uint16_t maxUs = MaxPulse, uint16_t pulse = DefPulse) {
         detach();
-        if (minus > maxus) {
-            uint16_t buf = minus;
-            minus = maxus;
-            maxus = buf;
-        }
-        if (minus == maxus) ++maxus;
-        _pin.init(pin, OUTPUT);
-        _attached = true;
-        _min = minus;
-        _max = maxus;
-        _us = constrain(_us, _min, _max);
-    }
-
-    // подключить на старый пин
-    void attach() {
-        if (_pin.valid()) _attached = true;
+        _pin = pin;
+        pinMode(_pin, OUTPUT);
+        config(minUs, maxUs);
+        writeMicroseconds(pulse);
     }
 
     // отключить
     void detach() {
-        _attached = false;
-        _tmrUs = 0;
-        if (_pin.valid()) _pin.low();
+        if (attached()) {
+            pinMode(_pin, INPUT);
+            digitalWrite(_pin, LOW);
+        }
+        _tmrOff = 0;
+        _pin = noPin;
     }
 
     // переключить в асинхронный режим
@@ -61,7 +43,7 @@ class SoftServo {
         _async = true;
     }
 
-    // переключить в режим задержки (по умолч)
+    // переключить в режим задержки (по умолч.)
     void delayMode() {
         _async = false;
     }
@@ -69,60 +51,82 @@ class SoftServo {
     // тикер, вызывать как можно чаще
     // в асинхронном режиме вернёт true во время отработки импульса
     bool tick() {
-        if (_tmrUs) {
-            if (uint16_t(uint16_t(micros()) - _tmrUs) >= _us) {
-                _pin.low();
-                _tmrUs = 0;
-                return false;
+        if (!attached()) return false;
+
+        if (_tmrOff) {
+            if (uint16_t(uint16_t(micros()) - _tmrOff) >= _us) {
+                digitalWrite(_pin, LOW);
+                _tmrOff = 0;
             }
             return true;
+        }
 
-        } else if (_attached && uint16_t(uint16_t(millis()) - _tmr50) >= SSERVO_PERIOD) {
-            _tmr50 = millis();
+        if (uint16_t(uint16_t(millis()) - _tmrPwm) >= _pwmPrd) {
+            _tmrPwm = millis();
             if (_async) {
-                _pin.high();
-                _tmrUs = micros();
-                if (!_tmrUs) --_tmrUs;
+                digitalWrite(_pin, HIGH);
+                _tmrOff = micros();
+                if (!_tmrOff) --_tmrOff;
                 return true;
             } else {
-                _pin.high();
+                digitalWrite(_pin, HIGH);
                 delayMicroseconds(_us);
-                _pin.low();
+                digitalWrite(_pin, LOW);
             }
         }
 
         return false;
     }
 
-    // поставить на угол
-    void write(uint16_t value) {
-        if (value < 200) value = map(min(value, uint16_t(180)), 0, 180, _min, _max);
+    // система в асинхронном ожидании
+    bool busy() const {
+        return _tmrOff != 0;
+    }
+
+    // поставить на угол или импульс
+    void write(uint16_t value, uint16_t maxAngle = 180) {
+        if (!maxAngle) maxAngle = 1;
+        if (value <= maxAngle) value = map(value, 0, maxAngle, _minUs, _maxUs);
         writeMicroseconds(value);
     }
 
     // поставить на импульс
     void writeMicroseconds(uint16_t us) {
-        _us = constrain(us, _min, _max);
+        _us = constrain(us, _minUs, _maxUs);
     }
 
     // вернуть текущий угол
-    int read() {
-        return map(_us, _min, _max, 0, 180);
+    uint16_t read(uint16_t maxAngle = 180) const {
+        return map(_us, _minUs, _maxUs, 0, maxAngle);
     }
 
     // вернуть текущий импульс
-    int readMicroseconds() {
+    uint16_t readMicroseconds() const {
         return _us;
     }
 
     // true если серво подключена
-    bool attached() {
-        return _attached;
+    bool attached() const {
+        return _pin != noPin;
+    }
+
+    // получить мин импульс
+    uint16_t getMinUs() const {
+        return _minUs;
+    }
+
+    // получить макс импульс
+    uint16_t getMaxUs() const {
+        return _maxUs;
     }
 
    private:
-    gio::PinIO _pin;
-    uint16_t _us = 700, _min = 500, _max = 2400;
-    uint16_t _tmr50 = 0, _tmrUs = 0;
-    bool _attached = false, _async = false;
+    static constexpr uint8_t noPin = 0xff;
+
+    uint16_t _minUs = MinPulse, _maxUs = MaxPulse;
+    uint16_t _us = DefPulse;
+    uint16_t _tmrPwm = 0, _tmrOff = 0;
+    uint16_t _pwmPrd = 20;
+    uint8_t _pin = noPin;
+    bool _async = false;
 };

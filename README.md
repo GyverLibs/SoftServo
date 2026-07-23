@@ -12,7 +12,6 @@
 - Работает на millis() и micros()
 - Синтаксис как у Servo.h
 - Режим работы асинхронный и с delay
-- Повышенная произвводительность для AVR
 
 ### Совместимость
 Совместима со всеми Arduino платформами (используются Arduino-функции)
@@ -26,6 +25,7 @@
 - [Баги и обратная связь](#feedback)
 
 <a id="install"></a>
+
 ## Установка
 - Библиотеку можно найти по названию **SoftServo** и установить через менеджер библиотек в:
     - Arduino IDE
@@ -50,21 +50,41 @@ SoftServo myservo;
 ```
 
 <a id="usage"></a>
+
 ## Использование
 ```cpp
-void attach(uint8_t pin, uint16_t min = 500, uint16_t max = 2400); // подключить с указанием мин и макс импульса
-void detach();          // отключить
-void asyncMode();       // переключить в асинхронный режим
-void delayMode();       // переключить в режим задержки (по умолч)
-bool tick();            // тикер, вызывать как можно чаще, в асинхронном режиме вернёт true во время отработки импульса
-void write(uint16_t value);  // поставить на угол
-void writeMicroseconds(uint16_t us); // поставить на импульс
-int read();             // вернуть текущий угол
-int readMicroseconds(); // вернуть текущий импульс
-bool attached();        // true если серво подключена
+static constexpr uint16_t MinPulse = 544;   // мин. импульс по умолчанию
+static constexpr uint16_t MaxPulse = 2400;  // макс. импульс по умолчанию
+static constexpr uint16_t DefPulse = 1500;  // импульс по умолчанию
+
+void setPWMFreq(uint16_t hz);   // установить частоту ШИМ, умолч. 50 Гц
+void config(uint16_t minUs, uint16_t maxUs); // установить min-max импульсы
+
+// подключить с указанием min-max импульса и стартового импульса
+void attach(uint8_t pin, uint16_t minUs = MinPulse, uint16_t maxUs = MaxPulse, uint16_t pulse = DefPulse);
+void detach();                  // отключить
+
+void asyncMode();               // переключить в асинхронный режим
+void delayMode();               // переключить в режим задержки (по умолч)
+bool tick();                    // тикер, вызывать как можно чаще
+
+void write(uint16_t value, uint16_t maxAngle = 180); // поставить угол или импульс
+void writeMicroseconds(uint16_t us);                 // поставить импульс
+uint16_t read(uint16_t maxAngle = 180);              // вернуть текущий угол
+uint16_t readMicroseconds();                         // вернуть текущий импульс
+
+bool busy();                    // система в асинхронном ожидании
+bool attached();                // true если серво подключена
+uint16_t getMinUs();            // получить мин. импульс
+uint16_t getMaxUs();            // получить макс. импульс
 ```
 
+`write(value)` работает как у `Servo`: если `value <= maxAngle`, значение считается углом и переводится в импульс по текущим `minUs/maxUs`. Если `value > maxAngle`, значение считается импульсом в микросекундах.
+
+В асинхронном режиме `tick()` не блокирует код на время импульса и возвращает `true`, пока импульс активен. В режиме задержки `tick()` блокирует выполнение на длительность импульса.
+
 <a id="example"></a>
+
 ## Пример
 Остальные примеры смотри в **examples**!
 ```cpp
@@ -103,6 +123,7 @@ void loop() {
 ```
 
 <a id="versions"></a>
+
 ## Версии
 - v1.0
 - v1.1 - переделан FastIO
@@ -110,6 +131,7 @@ void loop() {
 - v1.2 - мелкие фиксы
 
 <a id="feedback"></a>
+
 ## Баги и обратная связь
 При нахождении багов создавайте **Issue**, а лучше сразу пишите на почту [alex@alexgyver.ru](mailto:alex@alexgyver.ru)  
 Библиотека открыта для доработки и ваших **Pull Request**'ов!
