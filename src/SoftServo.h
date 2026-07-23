@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+// SoftServo
 class SoftServo {
    public:
     static constexpr uint16_t MinPulse = 544;
@@ -13,18 +14,18 @@ class SoftServo {
         _pwmPrd = 1000 / hz;
     }
 
-    // установить min-max импульсы
-    void config(uint16_t minUs, uint16_t maxUs) {
-        _minUs = minUs;
-        _maxUs = maxUs;
+    // подключить
+    void attach(uint8_t pin) {
+        attach(pin, MinPulse, MaxPulse, DefPulse);
     }
 
     // подключить с указанием мин и макс импульса
-    void attach(uint8_t pin, uint16_t minUs = MinPulse, uint16_t maxUs = MaxPulse, uint16_t pulse = DefPulse) {
+    void attach(uint8_t pin, uint16_t minUs, uint16_t maxUs, uint16_t pulse = DefPulse) {
         detach();
         _pin = pin;
-        pinMode(_pin, OUTPUT);
-        config(minUs, maxUs);
+        pinMode(pin, OUTPUT);
+        _minUs = minUs;
+        _maxUs = maxUs;
         writeMicroseconds(pulse);
     }
 
@@ -80,7 +81,7 @@ class SoftServo {
 
     // система в асинхронном ожидании
     bool busy() const {
-        return _tmrOff != 0;
+        return _tmrOff;
     }
 
     // поставить на угол или импульс
@@ -95,12 +96,12 @@ class SoftServo {
         _us = constrain(us, _minUs, _maxUs);
     }
 
-    // вернуть текущий угол
+    // получить текущий угол
     uint16_t read(uint16_t maxAngle = 180) const {
         return map(_us, _minUs, _maxUs, 0, maxAngle);
     }
 
-    // вернуть текущий импульс
+    // получить текущий импульс
     uint16_t readMicroseconds() const {
         return _us;
     }
@@ -108,16 +109,6 @@ class SoftServo {
     // true если серво подключена
     bool attached() const {
         return _pin != noPin;
-    }
-
-    // получить мин импульс
-    uint16_t getMinUs() const {
-        return _minUs;
-    }
-
-    // получить макс импульс
-    uint16_t getMaxUs() const {
-        return _maxUs;
     }
 
    private:

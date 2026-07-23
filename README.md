@@ -58,7 +58,6 @@ static constexpr uint16_t MaxPulse = 2400;  // макс. импульс по у�
 static constexpr uint16_t DefPulse = 1500;  // импульс по умолчанию
 
 void setPWMFreq(uint16_t hz);   // установить частоту ШИМ, умолч. 50 Гц
-void config(uint16_t minUs, uint16_t maxUs); // установить min-max импульсы
 
 // подключить с указанием min-max импульса и стартового импульса
 void attach(uint8_t pin, uint16_t minUs = MinPulse, uint16_t maxUs = MaxPulse, uint16_t pulse = DefPulse);
@@ -75,8 +74,6 @@ uint16_t readMicroseconds();                         // вернуть теку�
 
 bool busy();                    // система в асинхронном ожидании
 bool attached();                // true если серво подключена
-uint16_t getMinUs();            // получить мин. импульс
-uint16_t getMaxUs();            // получить макс. импульс
 ```
 
 `write(value)` работает как у `Servo`: если `value <= maxAngle`, значение считается углом и переводится в импульс по текущим `minUs/maxUs`. Если `value > maxAngle`, значение считается импульсом в микросекундах.

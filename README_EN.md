@@ -76,8 +76,6 @@ uint16_t read(uint16_t maxAngle = 180);              // get current angle
 uint16_t readMicroseconds();                         // get current pulse
 
 bool attached();                // true if the servo is connected
-uint16_t getMinUs();            // get min pulse
-uint16_t getMaxUs();            // get max pulse
 ```
 
 `write(value)` works like `Servo`: if `value <= maxAngle`, the value is treated as an angle and mapped to the current `minUs/maxUs` range. If `value > maxAngle`, the value is treated as a pulse width in microseconds.
